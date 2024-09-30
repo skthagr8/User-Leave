@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser,Group,Permission
 
 class Manager(models.Model):
     id = models.AutoField(primary_key=True) 
@@ -23,7 +24,7 @@ class Manager(models.Model):
 class EmployeeDepartments(models.Model):
     id = models.AutoField(primary_key=True) 
     name = models.CharField(max_length=256)
-    hod = models.OneToOneField('Manager',on_delete=models.SET_NULL,null=True)
+    hod = models.ForeignKey('Manager',on_delete=models.SET_NULL,null=True)
 
     # A department can have a manager, but it's optional (can be null)
     def __str__(self):
@@ -56,8 +57,13 @@ class Notifications(models.Model):
     def __str__(self):
         return f"Notification for {self.user}: {self.message}"
 
-class Employee(models.Model):
-    id = models.AutoField(primary_key=True)  
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db import models
+
+from django.contrib.auth.models import AbstractUser, Group, Permission
+from django.db import models
+
+class Employee(AbstractUser):
     first_name = models.CharField(max_length=256, null=False)
     last_name = models.CharField(max_length=256, null=False)
     email = models.EmailField(max_length=300, null=False, unique=True) 
@@ -65,12 +71,26 @@ class Employee(models.Model):
     gender = models.CharField(max_length=10, null=False)
     age = models.IntegerField(null=False)
     dob = models.DateField()
-    department = models.ForeignKey('EmployeeDepartments', on_delete=models.CASCADE,null=True)
-    registration_date = models.DateField(auto_now_add=True)  # Automatically set the date when the employee is created
+    department = models.ForeignKey('EmployeeDepartments', on_delete=models.CASCADE, null=True)
+    registration_date = models.DateField(auto_now_add=True)  
+
+    # Override groups and user_permissions to avoid reverse accessor conflicts
+    groups = models.ManyToManyField(
+        Group,
+        related_name='employee_set',  # Change to a unique name
+        blank=True,
+    )
+    user_permissions = models.ManyToManyField(
+        Permission,
+        related_name='employee_set',  # Change to a unique name
+        blank=True,
+    )
+
+    # Override password field to allow null values
+    password = models.CharField(max_length=128, null=True, blank=True)  # Allow null and blank
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
-
 
 class LeaveBalance(models.Model):
     id = models.AutoField(primary_key=True) 

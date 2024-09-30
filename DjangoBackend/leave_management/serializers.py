@@ -43,17 +43,24 @@ class EmployeeSerializer(serializers.ModelSerializer):
         model = Employee
         fields = [
             'id', 'first_name', 'last_name', 'email', 'phone_no', 'gender', 
-            'age', 'dob', 'registration_date', 'password', 'department', 'leave_balance'
+            'age', 'dob', 'registration_date', 'password', 'department'
         ]
 
     def create(self, validated_data):
         password = validated_data.pop('password')
-    
-        # Create the Employee instance
-        employee = Employee(**validated_data)
-        employee.set_password(password)  # Set the hashed password
         
-        # Save the employee again to update department and leave balance
+        # Generate a unique username based on first and last name
+        username_base = f"{validated_data['first_name'].lower()}.{validated_data['last_name'].lower()}"
+        username = username_base
+        counter = 1
+        
+        while Employee.objects.filter(username=username).exists():
+            username = f"{username_base}{counter}"
+            counter += 1
+
+        # Create the Employee instance
+        employee = Employee(username=username, **validated_data)
+        employee.set_password(password)  # Set the hashed password
         employee.save()
         
         return employee

@@ -116,7 +116,7 @@ class EmployeeRegistrationView(APIView):
     def post(self, request):
         serializer = EmployeeSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save()  # Save the employee data to the database
+            serializer.save()  # Save the employee data and automatically create leave balance
             return Response({"message": "Employee registered successfully!"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
